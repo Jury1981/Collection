@@ -43,15 +43,21 @@ jobs:
       - name: Validate notebooks
         run: |
           echo "Validating Jupyter notebooks..."
-          for notebook in notebooks/*.ipynb; do
+          shopt -s nullglob
+          notebooks=(notebooks/*.ipynb)
+          if [ ${#notebooks[@]} -eq 0 ]; then
+            echo "No notebooks found to validate"
+            exit 0
+          fi
+          for notebook in "${notebooks[@]}"; do
             echo "Checking $notebook"
             python -m nbconvert --to script --stdout "$notebook" > /dev/null
           done
           echo "All notebooks are valid!"
 
-      # Check requirements file
-      - name: Verify requirements.txt
+      # Check installed dependencies
+      - name: Verify installed dependencies
         run: |
-          echo "Verifying requirements.txt is properly formatted..."
+          echo "Verifying installed dependencies..."
           pip check
-          echo "Requirements check passed!"
+          echo "Dependency check passed!"
