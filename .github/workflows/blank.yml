@@ -25,12 +25,39 @@ jobs:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v4
 
-      # Runs a single command using the runners shell
-      - name: Run a one-line script
-        run: echo Hello, world!
+      # Set up Python environment
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
 
-      # Runs a set of commands using the runners shell
-      - name: Run a multi-line script
+      # Install dependencies
+      - name: Install dependencies
         run: |
-          echo Add other actions to build,
-          echo test, and deploy your project.
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install nbformat nbconvert
+
+      # Validate Jupyter notebooks
+      - name: Validate notebooks
+        run: |
+          echo "Validating Jupyter notebooks..."
+          shopt -s nullglob
+          notebooks=(notebooks/*.ipynb)
+          if [ ${#notebooks[@]} -eq 0 ]; then
+            echo "No notebooks found to validate"
+            exit 0
+          fi
+          for notebook in "${notebooks[@]}"; do
+            echo "Checking $notebook"
+            python -m nbconvert --to script --stdout "$notebook" > /dev/null
+          done
+          echo "All notebooks are valid!"
+
+      # Check installed dependencies
+      - name: Verify installed dependencies
+        run: |
+          echo "Verifying installed dependencies..."
+          pip check
+          echo "Dependency check passed!"
